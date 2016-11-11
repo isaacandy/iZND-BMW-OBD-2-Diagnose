@@ -1,4 +1,4 @@
-The sample configuration in the Config directory only fits to my car (E61),
+The sample configuration in the Config directory only fits to my car (E60),
 you have to adapt it as needed!
 
 Install the sample configuration with the following steps:
