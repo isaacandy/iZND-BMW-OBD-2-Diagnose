@@ -1,0 +1,156 @@
+// compile with:
+// best2 -Q -L "C:\EDIABAS\Bin\B2Runtim.lib" adapter_prg.b2v
+//
+
+////////////////////////////////////////////////////////////////////////
+//                           H E A D E R
+////////////////////////////////////////////////////////////////////////
+ecu     : Program operation mode for CAN adapter;
+origin  : Ulrich Holeschak;
+revision: 1.0;
+author  : Ulrich Holeschak;
+comment : Configure the OBD CAN adapter mode;
+comment : Replacement for D-CAN.exe;
+
+///////////////////////////////////////////
+//                        K O N S T A N T S
+////////////////////////////////////////////////////////////////////////
+
+long PARAMETER[] = {0x010F,115200,1200,20,10,2,5000};
+int AWLEN[] = {0,0};
+char TEL_PRG[] = { 0x81,0x00,0x00,0x00 };
+char TEL_CMD[] = { 0x82,0xF1,0xF1,0x00,0x00 };
+
+////////////////////////////////////////////////////////////////////////
+//                              J O B S
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : INITIALISIERUNG;
+      comment   : Initialisierung;
+      result    : DONE;
+        type    : int;
+        defrslt : ;
+        comment : Werte: 0 = Error during initialization;
+        comment : Werte: 1 = Initialization ok;
+   )
+{
+    open_communication();                   // Connect
+    set_repeat_counter(1);                  // Repeat counter
+    set_communication_pars(PARAMETER);
+    set_answer_length(AWLEN);
+
+    DONE = 1;
+}
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : ADAPTER_PRG;
+      comment   : Program adapter mode;
+      argument  : MODE;
+        type    : int;
+        defrslt : ;
+        comment : Adapter mode;
+        comment : 0: CAN off;
+        comment : 1: D-CAN 500 kbit/s;
+        comment : 9: K-CAN 100 kbit/s;
+        comment : Programming is only possible after power on of the adapter;
+        comment : while the red LED is active!;
+        comment : This is always possible if using the adapter replacement firmware;
+      result    : DONE;
+        type    : int;
+        defrslt : ;
+        comment : Werte: 0 = Error during programming;
+        comment : Werte: 1 = Programming ok;
+   )
+{
+
+    unsigned char response[];               // Buffer for ECU response
+    unsigned char request[];                // Buffer for ECU request
+
+    open_communication();                   // Connect
+    set_repeat_counter(1);                  // Repeat counter
+    set_communication_pars(PARAMETER);
+    set_answer_length(AWLEN);
+
+    request=TEL_PRG;                        // create request
+
+    DONE = 0;
+    if(exist(MODE))
+    {                                       // parameter present
+        request[3]=MODE;                    // set mode
+        set_trap_mask(0xffffffff);
+        send_and_receive(response,request);    
+        set_trap_mask(0x00000000);
+
+        // check response
+        if ((datalen(response) >= 5) && (request[3] == (~response[3] & 0xFF)))
+        {
+            DONE = 1;
+        }
+    }
+    close_communication();                   // Disconnect
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : ADAPTER_CMD;
+      comment   : Send adapter command;
+      argument  : CMD;
+        type    : int;
+        defrslt : ;
+        comment : Command;
+        comment : 0x00: Write block size;
+        comment : 0x80: Read block size;
+        comment : 0x01: Write separation time;
+        comment : 0x81: Read separation time;
+        comment : 0x02: Write CAN mode;
+        comment : 0x82: Read CAN mode;
+        comment : 0xFE: Read ignition state;
+        comment : 0xFF: Adapter reset (no response);
+      argument  : VALUE;
+        type    : int;
+        defrslt : ;
+        comment : Value for command;
+        comment : Cmd 0x00: Block size;
+        comment : Cmd 0x80: Ignored;
+        comment : Cmd 0x01: Separation time;
+        comment : Cmd 0x81: Ignored;
+        comment : Cmd 0x02: CAN mode (0=off, 1=500kb/s, 9=125kb/s);
+        comment : Cmd 0x82: Ignored;
+        comment : Cmd 0xFE: 0xFE;
+        comment : Cmd 0xFF: 0xFF;
+      result    : DONE;
+        type    : int;
+        defrslt : ;
+        comment : Werte: 0 = Error during communication;
+        comment : Werte: 1 = Communication ok;
+      result    : RESPONSE;
+        type    : int;
+        defrslt : ;
+        comment : Response value;
+   )
+{
+
+    unsigned char response[];               // Buffer for ECU response
+    unsigned char request[];                // Buffer for ECU request
+
+    request=TEL_CMD;                        // create request
+
+    if(!exist(CMD) || !exist(VALUE))
+    {
+        make_error(10);
+    }
+    request[3]=CMD;                     // set mode
+    request[4]=VALUE;                   // set value
+
+    send_and_receive(response,request);
+
+    DONE = 0;
+    // check response
+    if ((datalen(response) == 6) && (request[3] == response[3]))
+    {
+        DONE = 1;
+        RESPONSE = response[4];
+    }
+}
+
+////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Deep OBD for BMW</string>
+  <string name="button_connected">Connected</string>
+  <string name="button_disconnected">Disconnected</string>
+  <string name="button_yes">Yes</string>
+  <string name="button_no">No</string>
+  <string name="button_ok">Ok</string>
+  <string name="button_abort">Abort</string>
+  <string name="button_select">Select</string>
+  <string name="button_generate">Generate</string>
+  <string name="no_ext_storage">No external storage available</string>
+  <string name="bt_enable">Bluetooth is not enabled.\nDo you want to enable it now?</string>
+  <string name="wifi_enable">Wifi is not enabled.\nDo you want to enable it now?</string>
+  <string name="bt_not_available">Bluetooth is not available.</string>
+  <string name="wifi_not_available">Wifi is not available.</string>
+  <string name="config_select">No valid configuration is present.\nDo you want to generate or selecta configuration now?</string>
+  <string name="bt_device_select">No Bluetooth device has been selected.\nDo you want to select a device now?</string>
+  <string name="ecu_download_free_space">There is not enough free space ({0:fs0}) on the device for storing the ECU files.\nDo you want to select a different storage media?</string>
+  <string name="ecu_not_found">No ECU files have been found.</string>
+  <string name="ecu_package">Different ECU files are available for this application.</string>
+  <string name="ecu_download">Do you want to download the ECU files now (File size approx. {0:fs0})?</string>
+  <string name="error_no_error">No errors present</string>
+  <string name="error_no_response">No response</string>
+  <string name="version_change_info_message">This open source project is hosted at:
+\n<a href='http://ediabaslib.codeplex.com'>ediabaslib.codeplex.com</a>
+\nFeel free to contribute or to report problems.
+\nA detailed documentation could also be found on this web site.
+\n\nChanges in this version:
+\n- Allow to select ENET IP address
+\n- Fixed minor problems</string>
+  <string name="app_info_message">Deep OBD for BMW\nVersion: {0}\nId: {1}</string>
+
+  <!-- Alert titles -->
+  <string name="alert_title_info">Information</string>
+  <string name="alert_title_warning">Warning</string>
+  <string name="alert_title_error">Error</string>
+  <string name="alert_title_question">Question</string>
+
+  <!-- Compile -->
+  <string name="compile_start">Compiling user code</string>
+
+  <!-- Download -->
+  <string name="downloading_file">Downloading files</string>
+  <string name="download_failed">Download files failed.\Please check your network connection.</string>
+  <string name="extract_cleanup">Removing old files</string>
+  <string name="extract_file">Extracting files</string>
+  <string name="extract_failed">Extracting files failed.\nThe zip file seems to be corrupted.</string>
+  <string name="extract_failed_io">Writing extracted files failed.\nIs there no space left on the device?</string>
+
+  <!-- Send trace file -->
+  <string name="send_trace_file_request">Communication errors have occured.\nDo you want to send a compressed and anonymous trace file (size {0:fs0}) to allow improvement of the product?</string>
+  <string name="send_message_request">Communication errors have occured.\nDo you want to send anonymous data to allow improvement of the product?</string>
+  <string name="send_trace_file">Sending trace file</string>
+  <string name="compress_trace_file_failed">Compressing trace file failed.</string>
+  <string name="send_trace_file_failed">Sending trace file failed.</string>
+  <string name="send_trace_file_failed_retry">Sending trace file failed.\nPlease check your network connection.\nDo you want to retry sending?</string>
+
+  <!-- Translate -->
+  <string name="translate_text">Translating text</string>
+  <string name="translate_failed">Translation failed.\nPlease check your network connection.\nDo you want to retry the translation?</string>
+  <string name="translate_failed_message">Translation failed with error:\n{0}.\nDo you want to retry the translation?</string>
+  <string name="translate_enable_request">Do you want to enable automatic ECU text translation with <a href='http://translate.yandex.com'>Yandex.Translate</a>?\nThis requires a Yandex account and an API Key.\nPowered by Yandex.Translate</string>
+  <string name="translate_store_key">Do you want to store the API Key?</string>
+
+  <!-- Translate Menu -->
+  <string name="menu_translation_submenu">Translations</string>
+  <string name="menu_translation_enable">Translate ECU text</string>
+  <string name="menu_translation_yandex_key">Yandex API Key</string>
+  <string name="menu_translation_clear_cache">Clear translation cache</string>
+
+  <!-- Yandex key -->
+  <string name="yandex_api_key_title">Yandex API Key</string>
+  <string name="yandex_key_desc">For automatic translation with Yantex.Translate a free API Key is required, that allows a limited amount of translations per day.\nTo get this key, a Yandex account is required.\nWith the buttons below log in to your yandex account and create a key or display your existing ones.\nCopy the key from the web browser and paste it in the field below with the paste button.\nTo copy the key press hand hold the first word, extend the selected range and choose copy.</string>
+  <string name="yandex_key_copy_title">Copy API Key</string>
+  <string name="button_yandex_key_create">Create API Key</string>
+  <string name="button_yandex_key_get">Display API Keys</string>
+  <string name="yandex_key_paste_title">API Key</string>
+  <string name="button_yandex_key_paste">Paste API Key</string>
+  <string name="yandex_key_test_title">Translate</string>
+  <string name="button_yandex_key_test">Test translation</string>
+  <string name="button_yandex_key_test_failed">Translation failed</string>
+
+  <!--  DeviceListActivity -->
+  <string name="scanning">Scanning for devices ...</string>
+  <string name="select_device">Select adapter</string>
+  <string name="none_paired">No devices have been paired</string>
+  <string name="none_found">No devices found</string>
+  <string name="title_paired_devices">Paired devices</string>
+  <string name="title_other_devices">Other available devices</string>
+  <string name="button_scan">Scan for devices</string>
+  <string name="detect_adapter">Detecting adapter type</string>
+  <string name="adapter_connection_failed">Bluetooth connection to the adapter failed.\nIf another app uses the connection terminate the app or reboot the android device.\nDo you still want to use this adapter (the telegrams will be send unmodified)?</string>
+  <string name="unknown_adapter_type">Adapter type detection failed.\nDo you still want to use this adapter (the telegrams will be send unmodified)?</string>
+  <string name="invalid_adapter_type">The ELM327 adapter is not supporting all required commands and is incompatible with this software.</string>
+  <string name="fake_elm_adapter_type">The ELM327 adapter is a fake 2.1 version and is incompatible with this software.</string>
+  <string formatted="false" name="recommened_adapter_type">It\'s recommended to use an ELM327 v1.4b, v1.5 or origin v2.1 adapter,&lt;br&gt;which is based on PIC18F25K80 processor (no MCP2515 chip).&lt;br&gt;At &lt;a href=\'http://ediabaslib.codeplex.com/wikipage?title=Replacement%20firmware%20for%20ELM327\'&gt;ediabaslib.codeplex.com&lt;/a&gt; an improved firmware could be found.</string>
+  <string name="adapter_elm_replacement">ELM327 adapters are slow and communication is unstable.\nYou could now buy adapters with a replacement firmware at\n<a href='http://ediabaslib.codeplex.com/wikipage?title=Replacement%20firmware%20for%20ELM327'>ediabaslib.codeplex.com</a>\nthat has many improvements.</string>
+  <string name="adapter_cfg_required">The adapter may require configuration.\nDo you want to open the adapter configuration page?</string>
+  <string name="adapter_fw_update">There is a firmware update available for this adapter.\nDo you want to open the adapter configuration page for update installation?</string>
+
+  <!-- tabs_activate -->
+  <string name="button_active">Active</string>
+  <string name="button_inactive">Inactive</string>
+
+  <!-- tabs_errors -->
+  <string name="button_error_reset">Reset errors</string>
+
+  <!-- Options Menu -->
+  <string name="menu_settings">Settings</string>
+  <string name="menu_connect">Connect</string>
+  <string name="menu_adapter">Adapter</string>
+  <string name="menu_adapter_config">Adapter configuration</string>
+  <string name="menu_enet_ip">ENET IP</string>
+  <string name="menu_sel_cfg">Configuration</string>
+  <string name="menu_xml_tool">Configuration generator</string>
+  <string name="menu_ediabas_tool">Ediabas tool</string>
+  <string name="menu_sel_media">Storage media</string>
+  <string name="menu_download_ecu">Download ECU files</string>
+  <string name="menu_submenu_log">Data logging</string>
+  <string name="menu_submenu_help">Online help</string>
+  <string name="menu_info">App info</string>
+  <string name="menu_exit">Exit app</string>
+
+  <!-- Data logging -->
+  <string name="datalog_enable_trace">Create trace file</string>
+  <string name="datalog_append_trace">Append trace file</string>
+  <string name="datalog_enable_datalog">Log data</string>
+  <string name="datalog_date">Date</string>
+
+  <!-- FilePicker -->
+  <string name="select_file">Select file</string>
+  <string name="access_dir_failed">Access denied:</string>
+  <string name="file_picker_search">Search</string>
+
+  <!-- Storage media selection -->
+  <string name="select_media">Select storage media</string>
+  <string name="default_media">Default</string>
+  <string name="custom_media">Custom</string>
+  <string name="free_space">free</string>
+
+  <!-- Interface selection -->
+  <string name="select_interface">Select interface</string>
+  <string name="select_interface_bt">Bluetooth</string>
+  <string name="select_interface_enet">ENET</string>
+  <string name="select_interface_ftdi">USB (FTDI)</string>
+
+  <!-- ENET ip selection -->
+  <string name="select_enet_ip_search">Searching vehicles</string>
+  <string name="select_enet_ip">Select ENET IP address</string>
+  <string name="select_enet_ip_auto">Automatic</string>
+
+  <!--  EdiabasToolActivity -->
+  <string name="tool_title">Ediabas tool</string>
+  <string name="tool_select_sgbd">Select SGBD</string>
+  <string name="tool_read_sgbd">Read SGBD information</string>
+  <string name="tool_job_jobs">Jobs:</string>
+  <string name="tool_job_job">Job:</string>
+  <string name="tool_job_arguments">Arguments:</string>
+  <string name="tool_job_arguments_error_detail">Without arguments all errors are read</string>
+  <string name="tool_job_results">Results:</string>
+  <string name="tool_job_result">Result:</string>
+  <string name="tool_job_infos">Informations:</string>
+  <string name="tool_check_continuous">Continuous</string>
+  <string name="tool_read_errors_failure">Reading errors failed</string>
+  <string name="tool_no_errors">No errors</string>
+
+  <!-- Ediabas Tool Options Menu -->
+  <string name="menu_tool_sel_interface">Interface</string>
+  <string name="menu_tool_sel_sgbd_grp">SGBD (grp)</string>
+  <string name="menu_tool_sel_sgbd_prg">SGBD (prg)</string>
+
+  <!-- XML Tool Activity -->
+  <string name="xml_tool_title">Configuration generator</string>
+  <string name="button_xml_tool_read">Read</string>
+  <string name="button_xml_tool_edit">Edit</string>
+  <string name="button_xml_tool_save">Save</string>
+  <string name="xml_tool_analyze">Reading vehicle data</string>
+  <string name="xml_tool_select_sgbd">Select vehicle type</string>
+  <string name="xml_tool_no_response">No response from vehicle</string>
+  <string name="xml_tool_no_response_manual">No response from vehicle.\nFor K-LINE vehicles an USB or Deep OBD adapter is required.\nFor older vehicles only manual configuaration is possible.\nTherefore you have to identify the required .GRP or .PRG files on the info page of each ECU in INPA.\nDo you want to switch to <a href='http://ediabaslib.codeplex.com/wikipage?title=Configuration%20Generator#ManualConfiguration'>manual configuration</a>?</string>
+  <string name="xml_tool_read_jobs_failed">Reading jobs failed</string>
+  <string name="xml_tool_read_ecu_info_failed">Reading ECU information failed</string>
+  <string name="xml_tool_save_xml_failed">Saving configuration failed</string>
+  <string name="xml_tool_msg_save_config">Do you want to save the configuration?</string>
+  <string name="xml_tool_msg_ecu_error">Unable to get valid informations for some ECUs.</string>
+  <string name="xml_tool_ecu_list">Detected ECUs</string>
+  <string name="xml_tool_info_sgbd">SGBD</string>
+  <string name="xml_tool_info_grp">Group</string>
+  <string name="xml_tool_info_vin">VIN</string>
+  <string name="xml_tool_errors_page">Errors</string>
+  <string name="xml_tool_auto_config">Automatic</string>
+  <string name="xml_tool_man_config">Manual</string>
+
+  <!-- XML Tool Options Menu -->
+  <string name="menu_xml_tool_add_errors_page">Add errors page</string>
+  <string name="menu_xml_tool_cfg_type">Configuration</string>
+
+  <!-- XML Tool Edit Menu -->
+  <string name="menu_xml_tool_edit_grp">Add ECU (grp)</string>
+  <string name="menu_xml_tool_edit_prg">Add ECU (prg)</string>
+  <string name="menu_xml_tool_edit_del">Delete unused ECUs</string>
+
+  <!-- XML Tool context Menu -->
+  <string name="menu_xml_tool_move_top">Move to top</string>
+  <string name="menu_xml_tool_move_up">Move up</string>
+  <string name="menu_xml_tool_move_down">Move down</string>
+  <string name="menu_xml_tool_move_bottom">Move to bottom</string>
+
+  <!-- XML Tool Ecu Activity -->
+  <string name="xml_tool_ecu_title">Jobs for ECU: {0}</string>
+  <string name="xml_tool_ecu_job_comments">Comments for job: {0}</string>
+  <string name="xml_tool_ecu_result_comments">Comments for result: {0}</string>
+  <string name="xml_tool_ecu_result_type">Data type</string>
+  <string name="xml_tool_ecu_user_format">User</string>
+  <string name="xml_tool_ecu_format">Output format</string>
+  <string name="xml_tool_ecu_format_right">Right</string>
+  <string name="xml_tool_ecu_format_left">Left</string>
+  <string name="xml_tool_ecu_page_name">Page name</string>
+  <string name="xml_tool_ecu_ecu_name">ECU name</string>
+  <string name="xml_tool_ecu_jobs_name">Job list</string>
+  <string name="xml_tool_ecu_results">Job result</string>
+  <string name="xml_tool_ecu_display_text">Display text</string>
+  <string name="xml_tool_ecu_log_tag">Tag for data logging</string>
+  <string name="xml_tool_ecu_test_format">Test format</string>
+  <string name="xml_tool_button_test_format">Read</string>
+  <string name="xml_tool_execute_test_job">Executing job</string>
+  <string name="xml_tool_read_test_job_failed">Executing job failed</string>
+
+  <!-- CAN Adapter Activity -->
+  <string name="can_adapter_title">CAN adapter</string>
+  <string name="can_adapter_mode_name">CAN mode</string>
+  <string name="can_adapter_sep_time">Separation time [ms]</string>
+  <string name="can_adapter_block_size">Block size</string>
+  <string name="can_adapter_bt_pin">Bluetooth pin</string>
+  <string name="can_adapter_bt_name">Bluetooth name</string>
+  <string name="can_adapter_ignition_state">Ignition</string>
+  <string name="can_adapter_bat_voltage">Battery voltage</string>
+  <string name="can_adapter_fw_version">Firmware version (current / available)</string>
+  <string name="can_adapter_ser_num">Serial number</string>
+  <string name="can_adapter_expert">Expert mode</string>
+  <string name="can_adapter_comm_error">A communication error occured</string>
+  <string name="can_adapter_comm_error_std">A communication error occured.\nAdapter configuration is only possible,\nif the adapter LED is active after power on.</string>
+  <string name="can_adapter_ignition_on">Ignition on</string>
+  <string name="can_adapter_ignition_off">Ignition off</string>
+  <string name="can_adapter_text_off">0: Off (default)</string>
+  <string name="can_adapter_pin_length">The Bluetooth pin must be 4 digits long</string>
+  <string name="can_adapter_name_length">The UTF-8 Bluetooth name length invalid</string>
+  <string name="can_adapter_new_pin">The new Bluetooth pin {0} will get active after power cycle of the adapter</string>
+  <string name="can_adapter_new_name">The new Bluetooth name will get active after power cycle of the adapter</string>
+  <string name="can_adapter_fw_update_present">A firmware update for the adapter is available.\nDo you want to install the update now?</string>
+  <string name="can_adapter_fw_update_info">During the update the communication should be never interrupted.\nDo you want to continue?</string>
+  <string name="can_adapter_fw_update_active">Firmware update in progress.\nDo not interrupt communication.</string>
+  <string name="can_adapter_fw_update_conn_failed">Unable to connect to adapter</string>
+  <string name="can_adapter_fw_update_failed">Firmware update failed</string>
+  <string name="can_adapter_fw_update_ok">Firmware update successful</string>
+  <string name="button_can_adapter_read">Read</string>
+  <string name="button_can_adapter_write">Write</string>
+  <string name="button_can_adapter_can_500">D-CAN (from 3/2007)</string>
+  <string name="button_can_adapter_can_100">K-CAN (no standard)</string>
+  <string name="button_can_adapter_can_off">K-LINE (before 3/2007)</string>
+  <string name="button_can_adapter_fw_update">Firmware update</string>
+</resources>

@@ -1,0 +1,22 @@
+Name     Standard;
+PartNo   0001;
+Date     01/07/15;
+Revision 01;
+Designer Ulrich Holeschak;
+Company  None;
+Assembly None;
+Location None;
+Device   g16v8s;
+
+FIELD inputs = [unused, enable_obd_rxk, enable_obd_rxl, enable_ftdi_obd_txl, enable_ftdi_obd_txk, enable_ftdi_obd_rx, enable_txd1_obd_txl, enable_txd1_obd_txk, ftdi_txd, cpu_txd1, cpu_txd0, obd_rxk, obd_rxl];
+FIELD outputs = [cpu_rxd1, ftdi_rxd, cpu_rxd0, obd_txl, obd_txk];
+
+ORDER: inputs, %1, outputs;
+
+VECTORS:
+$comp inputs = 0;
+$set outputs = *****;
+$for i = 1..8192 :
+$out;
+$comp inputs = inputs + 1;
+$endf;

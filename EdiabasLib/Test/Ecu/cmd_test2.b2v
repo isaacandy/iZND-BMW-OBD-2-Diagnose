@@ -1,0 +1,5532 @@
+////////////////////////////////////////////////////////////////////////
+//                           H E A D E R
+////////////////////////////////////////////////////////////////////////
+ecu     : EDIABAS BEST/2 test;
+origin  : uholeschak;
+revision: 1.0;
+author  : uholeschak;
+uses	: base1,base2;
+comment : Internal tests EDIABAS BEST/2;
+comment : Compile with best2 -Q -L test.lib cmd_test2.b2v;
+////////////////////////////////////////////////////////////////////////
+//                        K O N S T A N T E N
+////////////////////////////////////////////////////////////////////////
+
+#pragma arraysize (2048)
+
+table TEST_TABLE_FIRST[3][]=
+{
+{"VALUE1", "VALUE2", "NAME" },
+{"0x14", "0x15", "LINE1" },
+{"0x24", "0x25", "LINE2" },
+{"0x34", "0x35", "LINE3" },
+{"0x44", "0x45", "LINE4" }
+};
+
+table TEST_TABLE[2][]=
+{
+{"VALUE", "NAME" },
+{"0x14",  "LINE1" },
+{"0x24",  "LINE2" },
+{"0x34",  "LINE3" },
+{"0x44",  "LINE4" },
+{"0x54",  "LINE5" },
+{"0x64",  "LINE6" }
+};
+
+table TEST_TABLE_LAST[3][]=
+{
+{"VALUE1", "VALUE2", "NAME" },
+{"0x14", "0x15", "LINE1" },
+{"0x24", "0x25", "LINE2" },
+{"0x34", "0x35", "LINE3" },
+{"0x44", "0x45", "LINE4" },
+{"0x54", "0x55", "LINE5" }
+};
+
+////////////////////////////////////////////////////////////////////////
+//                              J O B S
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : INITIALISIERUNG;
+      comment   : Initialisierung;
+      comment   : Dieser Job wird vom EDIABAS automatisch beim erstem;
+      comment   : Zugriff auf eine SGBD aufgerufen. Bei weiteren Zugriffen;
+      comment   : auf die selbe SGBD wird dieser Job nicht mehr aufgerufen.;
+      comment   : in der INITIALISIERUNG werden alle Funktionen aufgerufen,;
+      comment   : die nur einmal, vor der Kommunikation mit einem SG;
+      comment   : notwendig sind.;
+      comment   : Hier : 1. Verbindung zum Interface aufbauen ;
+      comment   :        2. Setzen des Wiederholungszaehlers fuer Fehler (gleich 2);
+      comment   :        3. Setzen der SG-Kommunikationsparameter;
+      comment   :        4. Platz der Antworttelegrammlaenge;
+      result    : DONE;
+        type    : int;
+        defrslt : ;
+        comment : Werte: 0 = Fehler bei der Initialisierung;
+        comment : Werte: 1 = Initialisierung erfolgreich durchgefuehrt;
+   ) 
+{
+#asm
+					clear		S0
+					pary		S0
+					jnz			initpar
+					clear		S0
+					move		S0,"CMD_TEST2_INIT"
+initpar:
+					shmset		"ID",S0
+#endasm
+    DONE = 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+job(  name      : ENDE;
+      comment   : Schliessen des SGBD;
+   ) 
+{
+#asm
+					clear		S0
+					pary		S0
+					jnz			exitpar
+					clear		S0
+					move		S0,"CMD_TEST2_EXIT"
+exitpar:
+					shmset		"ID",S0
+#endasm
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_SUBB_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					shmset		"ID","CMD_TEST2_SUBB"
+
+					move		L4,#2
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					subb		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					subb		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					subb		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#4
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					subb		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#4
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					subb		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#4
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					subb		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					subb		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					subb		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					subb		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$80000000
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					subb		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$8000
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					subb		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$80
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					subb		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					subb		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					subb		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					subb		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					subb		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					subb		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					subb		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_SUBC_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					shmset		"ID","CMD_TEST2_SUBC"
+
+					move		L4,#2
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					subc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					subc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					subc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#4
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					subc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#4
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					subc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#4
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					subc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					subc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					subc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					subc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$80000000
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					subc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$8000
+					move		I5,#0
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					subc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$80
+					move		BB,#0
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					subc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					subc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					subc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					subc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					subc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					subc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					subc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_ADDS_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#2
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					adds		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4_L", L4
+					ergd		"VALUE_RES4_D", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					adds		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					adds		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#4
+					move		L5,#-2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					adds		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#4
+					move		I5,#-2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					adds		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#4
+					move		BB,#-2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					adds		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					adds		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					adds		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					adds		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$80000000
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					adds		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$8000
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					adds		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$80
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					adds		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#-2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					adds		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#-2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					adds		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#-2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					adds		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					adds		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					adds		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					adds		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_ADDC_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#2
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					addc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					addc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					addc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#4
+					move		L5,#-2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					addc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#4
+					move		I5,#-2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					addc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#4
+					move		BB,#-2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					addc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					addc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					addc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					addc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					addc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#0
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					addc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#0
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					addc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#-2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					addc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#-2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					addc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#-2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					addc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					setc
+					addc		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					setc
+					addc		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					setc
+					addc		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_COMP_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#2
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					comp		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					comp		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					comp		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#4
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					comp		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#4
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					comp		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#4
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					comp		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					comp		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					comp		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					comp		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$80000000
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					comp		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$8000
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					comp		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$80
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					comp		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					comp		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					comp		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					comp		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-4
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					comp		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-4
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					comp		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-4
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					comp		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_MULT_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#2
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					mult		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					mult		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergi		"VALUE_RESB2", I5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					mult		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergc		"VALUE_RESB1", BB
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#2
+					move		L5,#-4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					mult		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#2
+					move		I5,#-4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					mult		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#2
+					move		BB,#-4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					mult		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-2
+					move		L5,#4
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					mult		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-2
+					move		I5,#4
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					mult		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-2
+					move		BB,#4
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					mult		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					mult		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					mult		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergi		"VALUE_RESB2", I5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					mult		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergc		"VALUE_RESB1", BB
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#2
+					move		L5,#4
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					mult		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES_FLGA4", L4
+					ergl		"VALUE_RES_FLGB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_DIVS_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#10
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					divs		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#10
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					divs		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergi		"VALUE_RESB2", I5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#10
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					divs		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergc		"VALUE_RESB1", BB
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#10
+					move		L5,#-2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					divs		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#10
+					move		I5,#-2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					divs		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergi		"VALUE_RESB2", I5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#10
+					move		BB,#-2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					divs		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergc		"VALUE_RESB1", BB
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#-10
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					divs		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#-10
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					divs		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergi		"VALUE_RESB2", I5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#-10
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					divs		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergc		"VALUE_RESB2", BB
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					divs		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					divs		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RESA2", I4
+					ergi		"VALUE_RESB2", I5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					divs		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RESA1", BA
+					ergc		"VALUE_RESB1", BB
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					clrt
+					move		L4,#$0001
+					settmr		L4
+					move		L4,#10
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					divs		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RESA4", L4
+					ergl		"VALUE_RESB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+					move		L4,#0
+					settmr		L4
+#endasm
+
+#asm
+					enewset
+					move		L4,#10
+					move		L5,#-2
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					divs		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES_FLGA4", L4
+					ergl		"VALUE_RES_FLGB4", L5
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_LSL_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$BFFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$BFFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$BF
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#31
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#15
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#7
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#32
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#16
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#8
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#33
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#17
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#9
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#1
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					lsl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES_FLG4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_ASL_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$BFFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$BFFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$BF
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#31
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#15
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#7
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#32
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#16
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#8
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#33
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#17
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asl			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#9
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asl			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#1
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					asl			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES_FLG4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_LSR_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$FFFFFFFD
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFD
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FD
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#31
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#15
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#7
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#32
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#16
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#8
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#33
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#17
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					lsr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#9
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					lsr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFE
+					move		L5,#1
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					lsr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES_FLG4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_ASR_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$FFFFFFFD
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFD
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FD
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#2
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#2
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#2
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#31
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#15
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#7
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#32
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#16
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#8
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#33
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$FFFF
+					move		I5,#17
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$FF
+					move		BB,#9
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$7FFFFFFF
+					move		L5,#33
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$7FFF
+					move		I5,#17
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					asr			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$7F
+					move		BB,#9
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					asr			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#-1
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFF
+					move		L5,#0
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					clrc
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					move		L4,#$FFFFFFFE
+					move		L5,#1
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					asr			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES_FLG4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_AND_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$55555555
+					move		L5,#$A5A5A5A5
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					and			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$5555
+					move		I5,#$A5A5
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					clrc
+					and			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$55
+					move		BB,#$A5
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					clrc
+					and			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_OR_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$55555555
+					move		L5,#$A5A5A5A5
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					or			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$5555
+					move		I5,#$A5A5
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					clrc
+					or			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$55
+					move		BB,#$A5
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					clrc
+					or			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_XOR_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$55555555
+					move		L5,#$A5A5A5A5
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					xor			L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$5555
+					move		I5,#$A5A5
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					clrc
+					xor			I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$55
+					move		BB,#$A5
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					clrc
+					xor			BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_TEST_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$55555555
+					move		L5,#$A5A5A5A5
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					test		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$5555
+					move		I5,#$A5A5
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					clrc
+					test		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$55
+					move		BB,#$A5
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					clrc
+					test		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					move		L4,#$55555555
+					move		L5,#$AAAAAAAA
+					ergl		"VALUE1", L4
+					ergl		"VALUE2", L5
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					test		L4,L5
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$5555
+					move		I5,#$AAAA
+					ergi		"VALUE1", I4
+					ergi		"VALUE2", I5
+					clrc
+					test		I4,I5
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$55
+					move		BB,#$AA
+					ergc		"VALUE1", BA
+					ergc		"VALUE2", BB
+					clrc
+					test		BA,BB
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_NOT_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					move		L4,#$55555555
+					ergl		"VALUE1", L4
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					not			L4
+#endasm
+	calc_flags();
+#asm
+					ergl		"VALUE_RES4", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I4,#$5555
+					ergi		"VALUE1", I4
+					clrc
+					not			I4
+#endasm
+	calc_flags();
+#asm
+					ergi		"VALUE_RES2", I4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		BA,#$55
+					ergc		"VALUE1", BA
+					clrc
+					not			BA
+#endasm
+	calc_flags();
+#asm
+					ergc		"VALUE_RES1", BA
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_FSUB_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					a2flt		F2,"2.4"
+					a2flt		F3,"4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#0
+					setc
+					fsub		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"2.4"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#1
+					clrc
+					fsub		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					clrc
+					fsub		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"1.2e308"
+					a2flt		F3,"-1.3e308"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					clrt
+					move		L4,#$0001
+					settmr		L4
+					clrc
+					fsub		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+					move		L4,#0
+					settmr		L4
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_FADD_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					a2flt		F2,"2.4"
+					a2flt		F3,"-4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#0
+					setc
+					fadd		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"-2.4"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#1
+					clrc
+					fadd		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"-4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					clrc
+					fadd		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"1.2e308"
+					a2flt		F3,"1.3e308"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					clrt
+					move		L4,#$0001
+					settmr		L4
+					clrc
+					fadd		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+					move		L4,#0
+					settmr		L4
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_FMUL_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					a2flt		F2,"2.4"
+					a2flt		F3,"-4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#0
+					setc
+					fmul		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"-2.4"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#1
+					clrc
+					fmul		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"-4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					clrc
+					fmul		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"1.2e308"
+					a2flt		F3,"1.3e308"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					clrt
+					move		L4,#$0001
+					settmr		L4
+					clrc
+					fmul		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+					move		L4,#0
+					settmr		L4
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_FDIV_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					a2flt		F2,"2.4"
+					a2flt		F3,"-4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#0
+					setc
+					fdiv		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"-2.4"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#1
+					clrc
+					fdiv		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"-4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					clrc
+					fdiv		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"1.3e308"
+					a2flt		F3,"1e-307"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					clrt
+					move		L4,#$0001
+					settmr		L4
+					clrc
+					fdiv		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+					move		L4,#0
+					settmr		L4
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_FCOMP_FLAGS;
+      comment   : Test math flags;
+   ) 
+{
+#asm
+					a2flt		F2,"2.4"
+					a2flt		F3,"4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#0
+					setc
+					fcomp		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"2.4"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L4,#1
+					clrc
+					fcomp		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"4.5"
+					a2flt		F3,"4.5"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					clrc
+					fcomp		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					a2flt		F2,"-1.2e308"
+					a2flt		F3,"1.3e308"
+					ergr		"VALUE1", F2
+					ergr		"VALUE2", F3
+					clrt
+					move		L4,#$0001
+					settmr		L4
+					clrc
+					fcomp		F2,F3
+#endasm
+	calc_flags();
+#asm
+					ergr		"VALUE_RES", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+					move		L4,#0
+					settmr		L4
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_PAR_FLAGS;
+      comment   : Test parameter flags;
+   ) 
+{
+#asm
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					pars		S0,#1
+#endasm
+	calc_flags();
+#asm
+					ergs		"PARS", S0
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					clrv
+					clrc
+					pars		S0,#1
+#endasm
+	calc_flags();
+#asm
+					ergs		"PARS", S0
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					parl		L4,#2
+#endasm
+	calc_flags();
+#asm
+					ergl		"PARL", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					parr		F2,#3
+#endasm
+	calc_flags();
+#asm
+					ergr		"PARR", F2
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L6,#$7FFFFFFF
+					comp		L6,#-4
+					setc
+					parn		L4
+#endasm
+	calc_flags();
+#asm
+					ergl		"PARN", L4
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_CLEAR_FLAGS;
+      comment   : Test move flags;
+   ) 
+{
+#asm
+					enewset
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					clear		S0
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					clear		L0
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clear		S0
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					move		S0,"TEST"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					move		L0,#-5
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_TABLE_FLAGS;
+      comment   : Test table flags;
+   ) 
+{
+#asm
+					clrt
+					move		L4,#$0401
+					settmr		L4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabcols		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"COLS_INIT", L4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabrows		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"ROWS_INIT", L4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabset		"TEST_TABLE1"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabcols		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"COLS_ERR", L4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabrows		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"ROWS_ERR", L4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabset		"TEST_TABLE"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabcols		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"COLS_OK", L4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabrows		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"ROWS_OK", L4
+#endasm
+
+
+
+#asm
+					enewset
+					clear		S2
+					move		S2,"LINE2"
+					clrc
+					tabseek		"NAME",S2
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"VALUE"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGET2", S4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"VALUE1"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGET", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+
+
+#asm
+					enewset
+					clear		S2
+					move		S2,"LINE9"
+					clrc
+					tabseek		"NAME",S2
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"VALUE"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGET9", S4
+#endasm
+
+#asm
+					enewset
+					clear		S2
+					move		S2,"LINE3"
+					clrc
+					tabseek		"NAME1",S2
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabseeku	"VALUE",#$44.L
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"NAME"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGET44", S4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabseeku	"VALUE",#$99.L
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"NAME"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGET99", S4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabseeku	"VALUE1",#$99.L
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabline		#4.L
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"NAME"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGETL4", S4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabline		#9.L
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"NAME"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGETL9", S4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabsetex	"TEST_TAB1", "base3"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabcols		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"COLS_ERREX1", L4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabrows		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"ROWS_ERREX2", L4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabsetex	"TEST_TAB11", "base1"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabcols		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"COLS_ERREX2", L4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabrows		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"ROWS_ERREX2", L4
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabsetex	"TEST_TAB1", "base1"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+
+
+#asm
+					enewset
+					clrc
+					tabcols		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"COLS_OK", L4
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabrows		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"ROWS_OK", L4
+#endasm
+
+
+
+#asm
+					enewset
+					clear		S2
+					move		S2,"LINE2"
+					clrc
+					tabseek		"NAME",S2
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					tabget		S4,"VALUE"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TABGET2", S4
+#endasm
+
+
+
+#asm
+					clrt
+					move		L4,#$0000
+					settmr		L4
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_CFG_FLAGS;
+      comment   : Test cfg flags;
+   ) 
+{
+#asm
+					enewset
+					clear		S4
+					move		S4,"-"
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgsg		S4, "BipEcuFile"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"ECUFILE", S4
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4,"-"
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgsg		S4, "Dummy"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"DUMMY_S", S4
+#endasm
+
+#asm
+					enewset
+					move		I8,#$AAAA
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgig		I8, "BipDebugLevel"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergi		"DEBUGLEVEL", I8
+#endasm
+
+#asm
+					enewset
+					move		I8,#$AAAA
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgig		I8, "Dummy"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergi		"DUMMY_I", I8
+#endasm
+
+#asm
+					enewset
+					move		I8,#$AAAA
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgig		I8, "IfhTrace"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergi		"IFHTRACE", I8
+#endasm
+
+#asm
+					enewset
+					move		I8,#$AAAA
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgis		"IfhTrace", #5.I
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					move		I8,#$AAAA
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					cfgig		I8, "IfhTrace"
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergi		"IFHTRACE", I8
+
+					cfgis		"IfhTrace", #0.I
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_ERROR_FLAGS;
+      comment   : Test error flags;
+   ) 
+{
+#asm
+					clrt
+					move		L4,#0.L
+					settmr		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+
+#asm
+					enewset
+					clrc
+					sett		#5
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+#asm
+					enewset
+					clrc
+					sett		#6
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+#asm
+					enewset
+					clrc
+					sett		#31
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+#asm
+					enewset
+					clrc
+					sett		#255
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+#asm
+					enewset
+					clrt
+					clrc
+					sett		#256
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+#asm
+					enewset
+					clrt
+					clrc
+					sett		#0
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+
+
+#asm
+					enewset
+					clrt
+					clrc
+					eerr
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+	get_nerror_bit();
+#asm
+					ergl		"VALUE_NERROR", L0
+#endasm
+
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_IFACE_FLAGS;
+      comment   : Test interface flags;
+   ) 
+{
+#asm
+					move		L4, #$FFFFFFFF
+					settmr		L4
+#endasm
+
+#asm
+					enewset
+					xconnect
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xtype		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XTYPE_S", S4
+					ergy		"XTYPE_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					move		I8, #$AAAA
+					clrc
+					xvers		I8
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergi		"XVERS", I8
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					move		L4, #$AAAAAAAA
+					clrc
+					xbatt		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"XBATT", L4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					move		L4, #$AAAAAAAA
+					clrc
+					xignit		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"XIGNIT", L4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xkeyb		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XKEYB_S", S4
+					ergy		"XKEYB_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xstate		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XSTATE_S", S4
+					ergy		"XSTATE_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clrc
+					xsetpar		{$0F.B,$01.B,$00.B,$00.B,$00.B,$C2.B,$01.B,$00.B,$B0.B,$04.B,$00.B,$00.B,$14.B,$00.B,$00.B,$00.B,$0A.B,$00.B,$00.B,$00.B,$02.B,$00.B,$00.B,$00.B,$88.B,$13.B,$00.B,$00.B}
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xsend		S4,{$84.B,$12.B,$F1.B,$18.B,$02.B,$FF.B,$FF.B}
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergy		"XSEND", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xstate		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XSTATE_S", S4
+					ergy		"XSTATE_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xsend		S4,{$83.B,$12.B,$F1.B,$18.B,$02.B,$FF.B}
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergy		"XSEND", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xrequf		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergy		"XREQUF", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xstate		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XSTATE_S", S4
+					ergy		"XSTATE_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clrc
+					xreset
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					xhangup
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xtype		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XTYPE_S", S4
+					ergy		"XTYPE_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					move		I8, #$AAAA
+					clrc
+					xvers		I8
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergi		"XVERS", I8
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					move		L4, #$AAAAAAAA
+					clrc
+					xbatt		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"XBATT", L4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					move		L4, #$AAAAAAAA
+					clrc
+					xignit		L4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergl		"XIGNIT", L4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xkeyb		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XKEYB_S", S4
+					ergy		"XKEYB_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "DEFAULT"
+					clrc
+					xstate		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"XSTATE_S", S4
+					ergy		"XSTATE_Y", S4
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					enewset
+					clrc
+					xreset
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+#endasm
+	get_error_bit();
+#asm
+					ergl		"VALUE_ERROR", L0
+					clrt
+#endasm
+
+#asm
+					move		L4, #$00000000
+					settmr		L4
+#endasm
+
+	return "IFACE_DONE";
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_TIME_FLAGS;
+      comment   : Test time;
+   ) 
+{
+#asm
+					enewset
+					parl		L4, #1
+;					ergl		"TIME_H", L4
+					mult		L4, #3600
+					move		L5, L4
+
+					parl		L4, #2
+;					ergl		"TIME_M", L4
+					mult		L4, #60
+					adds		L5, L4
+
+					parl		L4, #3
+;					ergl		"TIME_S", L4
+					adds		L5, L4
+
+					time		S5
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+;					ergy		"TIME", S5
+
+					clear		L4
+					move		A0, S5[#0]
+					mult		L4, #3600
+					move		L6, L4
+
+					clear		L4
+					move		A0, S5[#1]
+					mult		L4, #60
+					adds		L6, L4
+
+					clear		L4
+					move		A0, S5[#2]
+					adds		L6, L4
+
+;					ergl		"TIME_1", L5
+;					ergl		"TIME_2", L6
+
+					clear		S4
+					move		S4, "OK"
+
+					subb		L6, L5
+					jpl			time_ok1
+					clear		S4
+					move		S4, "BELOW"
+time_ok1:
+					comp		L6, #5
+					jle			time_ok2
+					clear		S4
+					move		S4, "OVER"
+time_ok2:
+					ergs		"TIMESTAT", S4
+#endasm
+
+#asm
+					enewset
+					date		S4
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergy		"DATE", S4
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "OK"
+					move		L5,#$7FFFFFFF
+					comp		L5,#-4
+					setc
+					ticks		L4
+					wait		#2
+					ticks		L5
+#endasm
+	calc_flags();
+#asm
+					subb		L5, L4
+					comp		L5, #2050
+					jle			wait_ok1
+					clear		S4
+					move		S4, "OVER"
+wait_ok1:
+					comp		L5, #1950
+					jge			wait_ok2
+					clear		S4
+					move		S4, "UNDER"
+wait_ok2:
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TIMESTAT", S4
+#endasm
+
+#asm
+					enewset
+					clear		S4
+					move		S4, "OK"
+					ticks		L4
+					waitex		#500
+					ticks		L5
+#endasm
+	calc_flags();
+#asm
+					subb		L5, L4
+					comp		L5, #550
+					jle			waitex_ok1
+					clear		S4
+					move		S4, "OVER"
+waitex_ok1:
+					comp		L5, #450
+					jge			waitex_ok2
+					clear		S4
+					move		S4, "UNDER"
+waitex_ok2:
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"TIMESTAT", S4
+#endasm
+
+	return "TIME_DONE";
+}
+
+////////////////////////////////////////////////////////////////////////
+
+job(  name      : TEST_ERGSYI_FLAGS;
+      comment   : Test ergsysi;
+   ) 
+{
+#asm
+					shmset		"ID","CMD_TEST2_ERGSYSI"
+					pars		S4, #1
+					parl		L4, #2
+					ergsysi		S4, I8
+#endasm
+	calc_flags();
+#asm
+					ergs		"FLAGS", S1
+					ergs		"JUMPS", S2
+					ergs		"ERGSYSI_S", S4
+					ergi		"ERGSYSI_I", I8
+#endasm
+
+}
+

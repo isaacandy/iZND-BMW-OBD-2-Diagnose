@@ -1,0 +1,7 @@
+Package
+*.suo
+*.opensdf
+*.sdf
+*.zip
+*.VC.opendb
+/.vs/
